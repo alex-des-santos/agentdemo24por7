@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "requester": "joao.silva@empresa.com",
+    "requester_name": "João Silva",
+    "manager": "maria.santos@empresa.com",
+    "title": "Não consigo entrar na minha conta de email",
+    "description": "Não consigo entrar no email corporativo desde hoje cedo. Tentei várias vezes mas aparece erro de senha incorreta.",
+    "status": "open",
+    "created_at": "2025-11-06T08:30:00"
+  },
+  {
+    "id": 2,
+    "requester": "maria.oliveira@empresa.com",
+    "requester_name": "Maria Oliveira",
+    "manager": null,
+    "title": "Bloqueio de conta Azure AD",
+    "description": "Minha conta do Azure está bloqueada. Preciso acessar urgentemente para continuar trabalhando.",
+    "status": "open",
+    "created_at": "2025-11-06T09:15:00"
+  },
+  {
+    "id": 3,
+    "requester": "carlos.pereira@empresa.com",
+    "requester_name": "Carlos Pereira",
+    "manager": "ana.costa@empresa.com",
+    "title": "Problema com VPN",
+    "description": "VPN não conecta de jeito nenhum. Já tentei reiniciar o computador mas continua o mesmo erro.",
+    "status": "open",
+    "created_at": "2025-11-06T09:45:00"
+  },
+  {
+    "id": 4,
+    "requester": "ana.rodrigues@empresa.com",
+    "requester_name": "Ana Rodrigues",
+    "manager": "pedro.lima@empresa.com",
+    "title": "Reset de senha Windows",
+    "description": "Esqueci minha senha do Windows e não consigo mais fazer login no notebook da empresa.",
+    "status": "open",
+    "created_at": "2025-11-06T10:00:00"
+  },
+  {
+    "id": 5,
+    "requester": "pedro.santos@empresa.com",
+    "requester_name": "Pedro Santos",
+    "manager": null,
+    "title": "Acesso negado ao PC",
+    "description": "Meu computador está travado com mensagem de conta bloqueada. Preciso desbloquear urgente.",
+    "status": "open",
+    "created_at": "2025-11-06T10:30:00"
+  }
+]
