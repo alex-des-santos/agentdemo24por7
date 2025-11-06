@@ -17,7 +17,7 @@ _CATEGORIES = [
 ]
 
 
-def _ensure_api_key() -> None:
+def _ensure_api_key() -> str:
     """Garante que a credencial esteja configurada (aceita MODEL_API_KEY ou OPENAI_API_KEY)."""
     val = os.getenv("OPENAI_API_KEY") or os.getenv("MODEL_API_KEY")
     if not val:
@@ -26,6 +26,7 @@ def _ensure_api_key() -> None:
         )
     # Normaliza para a lib oficial
     os.environ.setdefault("OPENAI_API_KEY", val)
+    return val
 
 
 def _client() -> OpenAI:

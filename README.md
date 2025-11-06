@@ -54,6 +54,8 @@ agentdemo/
 
 ## Executando
 
+### Localmente
+
 - Interface Web (Streamlit):
 ```bash
 streamlit run app.py
@@ -63,7 +65,31 @@ streamlit run app.py
 python main.py
 ```
 
-Observação: para a classificação, defina a credencial do serviço (por exemplo, `OPENAI_API_KEY` ou `MODEL_API_KEY`).
+### Configuração da API Key
+
+Para a classificação de tickets, é necessário configurar a chave da API:
+
+**Opção 1: Variável de ambiente**
+```bash
+export OPENAI_API_KEY="sk-..."
+# ou
+export MODEL_API_KEY="sua-chave"
+```
+
+**Opção 2: Arquivo .env**
+```bash
+cp .env.example .env
+# Edite o arquivo .env e adicione sua chave
+```
+
+**Opção 3: Streamlit Secrets (para deploy no Streamlit Cloud)**
+1. No dashboard do Streamlit Cloud, vá em Settings > Secrets
+2. Adicione:
+```toml
+OPENAI_API_KEY = "sk-..."
+```
+
+Ou localmente, crie `.streamlit/secrets.toml` (veja `.streamlit/secrets.toml.example`).
 
 ## Fluxo resumido
 

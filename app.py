@@ -24,8 +24,23 @@ def configure_page() -> None:
 
 def require_api_key() -> None:
     """Verifica se há credencial configurada para o serviço de classificação (quando aplicável)."""
-    if not (os.getenv("OPENAI_API_KEY") or os.getenv("MODEL_API_KEY")):
-        st.warning("Chave do serviço de classificacao nao configurada. Algumas funcoes podem nao operar.")
+    # Tentar obter a chave de várias fontes
+    api_key = None
+    
+    # 1. Variáveis de ambiente
+    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("MODEL_API_KEY")
+    
+    # 2. Streamlit secrets
+    if not api_key and hasattr(st, 'secrets'):
+        try:
+            api_key = st.secrets.get("OPENAI_API_KEY") or st.secrets.get("MODEL_API_KEY")
+            if api_key:
+                os.environ["OPENAI_API_KEY"] = api_key
+        except Exception:
+            pass
+    
+    if not api_key:
+        st.warning("Chave do serviço de classificaçao nao configurada. Algumas funcoes podem nao operar.")
 
 
 def load_open_tickets() -> List[Ticket]:
