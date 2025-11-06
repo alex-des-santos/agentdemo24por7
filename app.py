@@ -2,11 +2,18 @@
 
 from typing import Any, Dict, List
 import os
+import sys
+import traceback
 
 import streamlit as st
 
-from graph import build_graph
-from tools import ticket_manager
+try:
+    from graph import build_graph
+    from tools import ticket_manager
+except Exception as e:
+    st.error(f"Erro ao importar módulos: {e}")
+    st.code(traceback.format_exc())
+    st.stop()
 
 Ticket = Dict[str, Any]
 
@@ -313,11 +320,16 @@ def render_tabs(tickets: List[Ticket], auto_process: bool) -> None:
 
 def main() -> None:
     """Inicializa a aplicacao Streamlit."""
-    configure_page()
-    require_api_key()
-    tickets = load_open_tickets()
-    auto_process = render_sidebar_summary(tickets)
-    render_tabs(tickets, auto_process)
+    try:
+        configure_page()
+        require_api_key()
+        tickets = load_open_tickets()
+        auto_process = render_sidebar_summary(tickets)
+        render_tabs(tickets, auto_process)
+    except Exception as e:
+        st.error(f"Erro fatal na aplicação: {e}")
+        st.code(traceback.format_exc())
+        st.stop()
 
 
 if __name__ == "__main__":
