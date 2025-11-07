@@ -7,7 +7,9 @@ from classifier import (
     classify_ticket_intent,
     analyze_automation_capability,
     extract_system_from_description,
-    generate_resolution_summary
+    generate_resolution_summary,
+    analyze_ticket_priority_and_complexity,
+    diagnose_issue
 )
 
 class TicketState(TypedDict, total=False):
@@ -25,6 +27,12 @@ class TicketState(TypedDict, total=False):
     resolution_summary: str
     final_status: str
     error_message: str
+    priority: str
+    complexity: str
+    priority_justification: str
+    diagnosis: str
+    suggested_actions: List[str]
+    diagnosis_confidence: str
 
 def node_classify_intent(state: TicketState) -> TicketState:
     """Aciona o classificador para inferir a intencao do ticket e persistir no estado."""
@@ -58,6 +66,51 @@ def node_extract_system(state: TicketState) -> TicketState:
     return {
         **state,
         "system": system
+    }
+
+def node_analyze_priority(state: TicketState) -> TicketState:
+    """Avalia prioridade e complexidade do ticket."""
+    ticket = state["ticket"]
+    print(f"\n{'='*80}")
+    print(f"STEP 2.5: Analisando prioridade e complexidade")
+    print(f"{'='*80}")
+    
+    analysis = analyze_ticket_priority_and_complexity(ticket)
+    
+    print(f"Prioridade: {analysis['priority']}")
+    print(f"Complexidade: {analysis['complexity']}")
+    print(f"Justificativa: {analysis['justification']}")
+    
+    return {
+        **state,
+        "priority": analysis["priority"],
+        "complexity": analysis["complexity"],
+        "priority_justification": analysis["justification"]
+    }
+
+def node_diagnose(state: TicketState) -> TicketState:
+    """Realiza diagnóstico inteligente do problema."""
+    ticket = state["ticket"]
+    system = state.get("system", "Desconhecido")
+    user_info = state.get("user_info")
+    
+    print(f"\n{'='*80}")
+    print(f"STEP 4.5: Realizando diagnóstico inteligente")
+    print(f"{'='*80}")
+    
+    diagnosis_result = diagnose_issue(ticket, system, user_info)
+    
+    print(f"Diagnóstico: {diagnosis_result['diagnosis']}")
+    print(f"Confiança: {diagnosis_result['confidence']}")
+    print("Ações sugeridas:")
+    for action in diagnosis_result['suggested_actions']:
+        print(f"  - {action}")
+    
+    return {
+        **state,
+        "diagnosis": diagnosis_result["diagnosis"],
+        "suggested_actions": diagnosis_result["suggested_actions"],
+        "diagnosis_confidence": diagnosis_result["confidence"]
     }
 
 def node_check_eligibility(state: TicketState) -> TicketState:
@@ -379,8 +432,10 @@ def build_graph() -> StateGraph:
     
     builder.add_node("classify_intent", node_classify_intent)
     builder.add_node("extract_system", node_extract_system)
+    builder.add_node("analyze_priority", node_analyze_priority)
     builder.add_node("check_eligibility", node_check_eligibility)
     builder.add_node("get_user_info", node_get_user_info)
+    builder.add_node("diagnose", node_diagnose)
     builder.add_node("execute_playbook", node_execute_playbook)
     builder.add_node("notify_and_update", node_notify_and_update)
     builder.add_node("escalate", node_escalate)
@@ -388,7 +443,8 @@ def build_graph() -> StateGraph:
     builder.set_entry_point("classify_intent")
     
     builder.add_edge("classify_intent", "extract_system")
-    builder.add_edge("extract_system", "check_eligibility")
+    builder.add_edge("extract_system", "analyze_priority")
+    builder.add_edge("analyze_priority", "check_eligibility")
     
     builder.add_conditional_edges(
         "check_eligibility",
@@ -399,7 +455,8 @@ def build_graph() -> StateGraph:
         }
     )
     
-    builder.add_edge("get_user_info", "execute_playbook")
+    builder.add_edge("get_user_info", "diagnose")
+    builder.add_edge("diagnose", "execute_playbook")
     builder.add_edge("execute_playbook", "notify_and_update")
     builder.add_edge("notify_and_update", END)
     builder.add_edge("escalate", END)

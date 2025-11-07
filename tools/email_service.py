@@ -3,6 +3,7 @@
 # Imports das bibliotecas padrão usados para registrar timestamps e tipos de retorno
 from datetime import datetime
 from typing import Dict, Optional
+import os
 
 def send_email(to: str, subject: str, body: str, cc: Optional[str] = None) -> Dict:
     """Simula o envio de um e-mail e registra o conteúdo."""
@@ -39,10 +40,32 @@ def send_email(to: str, subject: str, body: str, cc: Optional[str] = None) -> Di
 
 def send_notification_to_user(user_email: str, ticket_id: int, resolution_details: Dict) -> Dict:
     """Notifica o solicitante que o ticket foi resolvido automaticamente."""
-    # Monta o assunto do email para o usuário solicitante
+    # Tenta gerar email personalizado via LLM se disponível
+    use_llm = os.getenv("USE_LLM_EMAILS", "true").lower() == "true"
+    
+    if use_llm:
+        try:
+            from classifier import generate_personalized_email
+            
+            # Constrói contexto do ticket
+            ticket = {
+                "id": ticket_id,
+                "title": resolution_details.get("title", "Problema de acesso"),
+                "requester": user_email,
+            }
+            context = {
+                "status": "resolvido",
+                "actions_summary": resolution_details.get('actions_summary', 'Ações executadas'),
+                "temp_password": resolution_details.get('temp_password'),
+            }
+            
+            subject, body = generate_personalized_email("user", ticket, context)
+            return send_email(user_email, subject, body)
+        except Exception as e:
+            print(f"Erro ao gerar email via LLM, usando template padrão: {e}")
+    
+    # Fallback: template estático
     subject = f"Ticket #{ticket_id} - Problema Resolvido"
-
-    # Constrói o corpo com o resumo das ações de resolução realizadas
     body = f"""
 Olá,
 
@@ -62,16 +85,33 @@ Se você ainda estiver enfrentando problemas, por favor, abra um novo ticket.
 Atenciosamente,
 Sistema Automático de Suporte
 """
-
-    # Envia a notificação usando o utilitário genérico de envio
     return send_email(user_email, subject, body)
 
 def send_notification_to_manager(manager_email: str, user_name: str, ticket_id: int, resolution_details: Dict) -> Dict:
     """Informa ao gestor que o ticket do solicitante foi resolvido."""
-    # Monta o assunto do email para o gestor do usuário
+    use_llm = os.getenv("USE_LLM_EMAILS", "true").lower() == "true"
+    
+    if use_llm:
+        try:
+            from classifier import generate_personalized_email
+            
+            ticket = {
+                "id": ticket_id,
+                "title": resolution_details.get("title", "Problema de acesso"),
+                "requester_name": user_name,
+            }
+            context = {
+                "status": "resolvido",
+                "actions_summary": resolution_details.get('actions_summary', 'Ações executadas'),
+            }
+            
+            subject, body = generate_personalized_email("manager", ticket, context)
+            return send_email(manager_email, subject, body)
+        except Exception as e:
+            print(f"Erro ao gerar email via LLM para gestor, usando template padrão: {e}")
+    
+    # Fallback: template estático
     subject = f"Notificação: Ticket #{ticket_id} resolvido para {user_name}"
-
-    # Constrói o corpo com os detalhes de resolução para conhecimento do gestor
     body = f"""
 Olá,
 
@@ -90,8 +130,6 @@ Este é um email informativo. Nenhuma ação adicional é necessária.
 Atenciosamente,
 Sistema Automático de Suporte
 """
-
-    # Encaminha a mensagem formatada para o serviço de email simulado
     return send_email(manager_email, subject, body)
 
 def send_escalation_notification_to_user(user_email: str, ticket_id: int, escalation_details: Dict) -> Dict:
@@ -153,10 +191,29 @@ Sistema Automático de Suporte
 
 def send_escalation_notification(ticket_id: int, reason: str, assigned_team: str = "Suporte N2") -> Dict:
     """Envia o e-mail interno de escalação para a equipe responsável."""
-    # Assunto interno direcionado à equipe responsável
+    use_llm = os.getenv("USE_LLM_EMAILS", "true").lower() == "true"
+    
+    if use_llm:
+        try:
+            from classifier import generate_personalized_email
+            
+            ticket = {
+                "id": ticket_id,
+                "title": "Ticket escalado",
+                "requester_name": "Usuário",
+            }
+            context = {
+                "reason": reason,
+                "assigned_team": assigned_team,
+            }
+            
+            subject, body = generate_personalized_email("team", ticket, context)
+            return send_email(f"{assigned_team.lower().replace(' ', '_')}@empresa.com", subject, body)
+        except Exception as e:
+            print(f"Erro ao gerar email de escalação via LLM, usando template padrão: {e}")
+    
+    # Fallback: template estático
     subject = f"Ticket #{ticket_id} - Escalado para {assigned_team}"
-
-    # Corpo com o motivo da escalada para ação da equipe
     body = f"""
 ESCALAÇÃO DE TICKET
 
@@ -170,6 +227,4 @@ Por favor, revisar e tomar ação apropriada.
 
 Sistema Automático de Suporte
 """
-
-    # Define o destinatário com base no nome da equipe, normalizando para um email genérico
     return send_email(f"{assigned_team.lower().replace(' ', '_')}@empresa.com", subject, body)
